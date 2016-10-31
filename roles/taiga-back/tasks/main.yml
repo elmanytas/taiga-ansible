@@ -1,0 +1,97 @@
+- name: Install a C compiler and development headers
+  package: name={{ item }} state=present
+  with_items:
+  - build-essential
+  - binutils-doc
+  - autoconf
+  - flex
+  - bison
+  - libjpeg-dev
+  - libfreetype6-dev
+  - zlib1g-dev
+  - libzmq3-dev
+  - libgdbm-dev
+  - libncurses5-dev
+  - automake
+  - libtool
+  - libffi-dev
+  - curl
+  - git
+  - tmux
+  - gettext
+  - postgresql-server-dev-all
+  become: yes
+  become_user: root
+
+- name: Setup python 3 environment
+  package: name={{ item }} state=present
+  with_items:
+  - python3
+  - python3-pip
+  - python-dev
+  - python3-dev
+  - python-pip
+  - virtualenvwrapper
+  - libxml2-dev
+  - libxslt-dev
+  become: yes
+  become_user: root
+
+- name: Create taiga system user
+  user: name={{ taiga_back_username }}
+  become: yes
+  become_user: root
+
+- name: Clone taiga-back repository
+  git: repo=https://github.com/taigaio/taiga-back.git dest=/home/{{ taiga_back_username }}/taiga-back version={{ code_version }}
+  become: yes
+  become_user: "{{ taiga_back_username }}"
+
+- name: Create taiga-back virtualenv and install requirements
+  pip: requirements=/home/{{ taiga_back_username }}/taiga-back/requirements.txt virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv virtualenv_python=/usr/bin/python3.5
+  become: yes
+  become_user: "{{ taiga_back_username }}"
+
+- name: Run migrations
+  django_manage: command="migrate --noinput" app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
+  become: yes
+  become_user: "{{ taiga_back_username }}"
+
+# TODO: test if first installation
+- name: Create initial user
+  django_manage: command=loaddata app_path=/home/{{ taiga_back_username }}/taiga-back fixtures=initial_user virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
+  become: yes
+  become_user: "{{ taiga_back_username }}"
+
+# TODO: test if first installation
+- name: Create initial project templates
+  django_manage: command=loaddata app_path=/home/{{ taiga_back_username }}/taiga-back fixtures=initial_project_templates virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
+  become: yes
+  become_user: "{{ taiga_back_username }}"
+
+# TODO: test if first installation
+- name: Create initial role
+  django_manage: command=loaddata app_path=/home/{{ taiga_back_username }}/taiga-back fixtures=initial_role virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
+  become: yes
+  become_user: "{{ taiga_back_username }}"
+
+- name: Compile messages
+  django_manage: command=compilemessages app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
+  become: yes
+  become_user: "{{ taiga_back_username }}"
+
+- name: Run collectstatic
+  django_manage: command="collectstatic --noinput" app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
+  become: yes
+  become_user: "{{ taiga_back_username }}"
+
+# TODO: test if we really want it
+#- name: Load sample data
+#  django_manage: command="sample_data" app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
+#  become: yes
+#  become_user: "{{ taiga_back_username }}"
+
+- name: Setup taiga back
+  template: src=taiga-back_local.py.j2 dest=/home/{{ taiga_back_username }}/taiga-back/settings/local.py owner={{ taiga_back_username }} group={{ taiga_back_username }} mode=0640
+  become: yes
+  become_user: "{{ taiga_back_username }}"

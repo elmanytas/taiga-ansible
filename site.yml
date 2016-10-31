@@ -1,0 +1,63 @@
+# Database services
+- hosts: sql-database
+  roles:
+  - ntp
+  - sql-database
+  tags:
+  - database
+  - sql-database
+  - postgresql
+  become: yes
+  become_user: root
+
+# Message services
+- hosts: message-queue
+  roles:
+  - ntp
+  - message-queue
+  tags:
+  - message-queue
+  - rabbitmq
+  become: yes
+  become_user: root
+
+# # Message services
+# - hosts: cache-storage
+#   roles:
+#   - ntp
+#   - cache-storage
+#   tags:
+#   - cache-storage
+#   - redis
+#
+#
+# Taiga back
+- hosts: taiga-back
+  roles:
+  - ntp
+  - taiga-back
+  - circus
+  tags:
+  - taiga-back
+  - back
+
+# Taiga front dist
+- hosts: taiga-front-dist
+  roles:
+  - ntp
+  - taiga-front-dist
+  - circus
+  tags:
+  - taiga-front
+  - taiga-front-dist
+  - front
+
+# Taiga events
+- hosts: taiga-events
+  roles:
+  - ntp
+  - taiga-events
+  - circus
+  tags:
+  - taiga-events
+  - events

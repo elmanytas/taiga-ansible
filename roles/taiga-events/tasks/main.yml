@@ -1,0 +1,36 @@
+- name: Setup nodejs environment
+  package: name={{ item }} state=present
+  with_items:
+  - nodejs
+  - nodejs-legacy
+  - npm
+  become: yes
+  become_user: root
+
+- name: Create taiga system user
+  user: name={{ taiga_events_username }}
+  become: yes
+  become_user: root
+
+- name: Clone taiga-events repository
+  git: repo=https://github.com/taigaio/taiga-events.git dest=/home/{{ taiga_events_username }}/taiga-events version=master
+  become: yes
+  become_user: "{{ taiga_events_username }}"
+
+- name: Run npm install
+  shell: cd /home/{{ taiga_events_username }}/taiga-events ; npm install
+  become: yes
+  become_user: "{{ taiga_events_username }}"
+
+- name: Install "coffee-script" node.js package.
+  npm: name=coffee-script path=/home/{{ taiga_events_username }}/taiga-events
+  become: yes
+  become_user: "{{ taiga_events_username }}"
+
+- name: Setup taiga events
+  template: src=config.json.j2 dest=/home/{{ taiga_events_username }}/taiga-events/config.json owner={{ taiga_events_username }} group={{ taiga_events_username }} mode=0640
+  become: yes
+  become_user: "{{ taiga_events_username }}"
+
+- name: Ensure logs directory exists
+  file: path=/home/{{ taiga_events_username }}/logs state=directory owner={{ taiga_events_username }} group={{ taiga_events_username }} mode=0755

@@ -1,0 +1,15 @@
+# Why not deploy this in the standard nginx directory?
+- name: Create taiga system user
+  user: name={{ taiga_front_dist_username }}
+  become: yes
+  become_user: root
+
+- name: Clone taiga-front-dist repository
+  git: repo=https://github.com/taigaio/taiga-front-dist.git dest=/home/{{ taiga_back_username }}/taiga-front-dist version={{ code_version }}
+  become: yes
+  become_user: "{{ taiga_front_dist_username }}"
+
+- name: Setup taiga-front-dist
+  template: src=conf.json.j2 dest=/home/{{ taiga_back_username }}/taiga-front-dist/dist/conf.json owner={{ taiga_front_dist_username }} group={{ taiga_front_dist_username }} mode=0640
+  become: yes
+  become_user: "{{ taiga_front_dist_username }}"

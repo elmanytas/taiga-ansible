@@ -1,0 +1,17 @@
+- name: Setup circus environment
+  package: name=circus state=present
+  become: yes
+  become_user: root
+
+- name: Ensure logs directory exists
+  file: path=/home/{{ taiga_back_username }}/logs state=directory owner={{ taiga_back_username }} group={{ taiga_back_username }} mode=0755
+
+- name: Setup taiga-back circus
+  template: src=circus_taiga.ini.j2 dest=/etc/circus/conf.d/taiga.ini owner=root group=root mode=0644
+  become: yes
+  become_user: root
+  notify:
+  - restart circusd
+#  - circusctl reloadconfig
+#  - circusctl restart taiga
+#  - circusctl restart taiga-celery
