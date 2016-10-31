@@ -1,11 +1,14 @@
 - name: circusctl reloadconfig
-  shell: service
+  shell: circusctl reloadconfig
 
 - name: circusctl restart taiga
   shell: circusctl restart taiga
 
-- name: circusctl restart taiga
+- name: circusctl restart taiga-celery
   shell: circusctl restart taiga-celery
+
+- name: circusctl restart taiga-events
+  shell: circusctl restart taiga-events
 
 - name: restart circusd
   service: name=circusd state=restarted

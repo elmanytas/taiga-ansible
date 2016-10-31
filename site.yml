@@ -21,16 +21,14 @@
   become: yes
   become_user: root
 
-# # Message services
-# - hosts: cache-storage
-#   roles:
-#   - ntp
-#   - cache-storage
-#   tags:
-#   - cache-storage
-#   - redis
-#
-#
+# Message services
+- hosts: redis
+  - ntp
+  - redis
+  tags:
+  - cache-storage
+  - redis
+
 # Taiga back
 - hosts: taiga-back
   roles:

@@ -96,6 +96,50 @@
   become: yes
   become_user: "{{ taiga_back_username }}"
 
+
+- name: Install circus
+  package: name=circus state=present
+  become: yes
+  become_user: root
+
+- name: Ensure logs directory exists
+  file: path=/home/{{ taiga_back_username }}/logs state=directory owner={{ taiga_back_username }} group={{ taiga_back_username }} mode=0755
+
+- name: Setup taiga-events circus
+  template: src=circus_taiga-back.ini.j2 dest=/etc/circus/conf.d/taiga-back.ini owner=root group=root mode=0644
+  notify:
+  - restart circusd
+  become: yes
+  become_user: root
+
+
+- name: Install nginx
+  package: name=nginx state=present
+  become: yes
+  become_user: root
+
+- name: Setup nginx
+  template: src=nginx_taiga-back.j2 dest=/etc/nginx/sites-available/taiga-back owner=root group=root mode=0644
+  notify:
+  - restart nginx
+  become: yes
+  become_user: root
+
+- name: Enable taiga-back site (virtualhost)
+  file: src=/etc/nginx/sites-available/taiga-back dest=/etc/nginx/sites-enabled/taiga-back owner=root group=root state=link
+  notify:
+  - restart nginx
+  become: yes
+  become_user: root
+
+- name: Disable default site (virtualhost)
+  file: path=/etc/nginx/sites-enabled/default state=absent
+  notify:
+  - restart nginx
+  become: yes
+  become_user: root
+
+# Maybe celery could need an independent role
 - name: Setup taiga-celery
   template: src=taiga-celery.ini.j2 dest=/etc/circus/conf.d/taiga-celery.ini
   notify:

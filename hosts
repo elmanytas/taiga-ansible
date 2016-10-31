@@ -49,7 +49,8 @@ secret_key=theveryultratopsecretkey
 [message-queue]
 10.42.84.50
 
-[cache-storage]
+[redis]
+10.42.84.50
 #taiga.jmferrer.os.paradigmadigital.com
 
 [taiga-back]

@@ -48,7 +48,8 @@
   become: yes
   become_user: root
   notify:
-  - restart circusd
-#  - circusctl reloadconfig
-#  - circusctl restart taiga
-#  - circusctl restart taiga-celery
+#  - restart circusd
+  - circusctl reloadconfig
+  - circusctl restart taiga
+  - circusctl restart taiga-celery
+  - circusctl restart taiga-events
