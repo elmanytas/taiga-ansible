@@ -2,6 +2,7 @@
   apt: name=rabbitmq-server state=present
   tags:
   - appliance
+
 - name: Create vhost
   rabbitmq_vhost:
     name={{ rabbitmq_vhost }}

@@ -95,3 +95,12 @@
   template: src=taiga-back_local.py.j2 dest=/home/{{ taiga_back_username }}/taiga-back/settings/local.py owner={{ taiga_back_username }} group={{ taiga_back_username }} mode=0640
   become: yes
   become_user: "{{ taiga_back_username }}"
+
+- name: Setup taiga-celery
+  template: src=taiga-celery.ini.j2 dest=/etc/circus/conf.d/taiga-celery.ini
+  notify:
+  - circusctl reloadconfig
+  - circusctl restart taiga
+  - circusctl start taiga-celery
+  become: yes
+  become_user: root
