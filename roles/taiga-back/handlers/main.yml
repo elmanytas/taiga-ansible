@@ -1,14 +1,24 @@
 - name: restart circusd
   service: name=circusd state=restarted
+  become: yes
+  become_user: root
 
 - name: circusctl reloadconfig
-  shell: service
+  shell: circusctl reloadconfig
+  become: yes
+  become_user: root
 
 - name: circusctl restart taiga
   shell: circusctl restart taiga
+  become: yes
+  become_user: root
 
 - name: circusctl restart taiga
   shell: circusctl restart taiga-celery
+  become: yes
+  become_user: root
 
 - name: restart nginx
   service: name=nginx state=restarted
+  become: yes
+  become_user: root

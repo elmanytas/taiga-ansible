@@ -1,7 +1,7 @@
 [taiga:children]
 sql-database
 message-queue
-cache-storage
+redis
 taiga-back
 taiga-front-dist
 taiga-events
@@ -57,7 +57,7 @@ secret_key=theveryultratopsecretkey
 10.42.84.50
 
 [taiga-front-dist]
-10.42.84.50
+#10.42.84.50
 
 [taiga-events]
-10.42.84.50
+#10.42.84.50

@@ -11,6 +11,26 @@
   become_user: root
 
 # Message services
+- hosts: nginx
+  roles:
+  - nginx
+  tags:
+  - nginx
+  become: yes
+  become_user: root
+
+# Message services
+- hosts: redis
+  roles:
+  - ntp
+  - redis
+  tags:
+  - cache-storage
+  - redis
+  become: yes
+  become_user: root
+
+# Message services
 - hosts: message-queue
   roles:
   - ntp
@@ -21,30 +41,22 @@
   become: yes
   become_user: root
 
-# Message services
-- hosts: redis
-  - ntp
-  - redis
-  tags:
-  - cache-storage
-  - redis
-
 # Taiga back
 - hosts: taiga-back
   roles:
+  - nginx
   - ntp
   - taiga-back
-  - circus
   tags:
   - taiga-back
   - back
+
 
 # Taiga front dist
 - hosts: taiga-front-dist
   roles:
   - ntp
   - taiga-front-dist
-  - circus
   tags:
   - taiga-front
   - taiga-front-dist
@@ -55,7 +67,6 @@
   roles:
   - ntp
   - taiga-events
-  - circus
   tags:
   - taiga-events
   - events

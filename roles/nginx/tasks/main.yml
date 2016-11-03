@@ -1,56 +1,30 @@
-- name: Setup nodejs environment
-  package: name={{ item }} state=present
-  with_items:
-  - nodejs
-  - nodejs-legacy
-  - npm
-  become: yes
-  become_user: root
-
-- name: Create taiga system user
-  user: name={{ taiga_events_username }}
-  become: yes
-  become_user: root
-
-- name: Clone taiga-events repository
-  git: repo=https://github.com/taigaio/taiga-events.git dest=/home/{{ taiga_events_username }}/taiga-events version=master
-  become: yes
-  become_user: "{{ taiga_events_username }}"
-
-- name: Run npm install
-  shell: cd /home/{{ taiga_events_username }}/taiga-events ; npm install
-  become: yes
-  become_user: "{{ taiga_events_username }}"
-
-- name: Install "coffee-script" node.js package.
-  npm: name=coffee-script path=/home/{{ taiga_events_username }}/taiga-events
-  become: yes
-  become_user: "{{ taiga_events_username }}"
-
-- name: Setup taiga events
-  template: src=config.json.j2 dest=/home/{{ taiga_events_username }}/taiga-events/config.json owner={{ taiga_events_username }} group={{ taiga_events_username }} mode=0640
-  become: yes
-  become_user: "{{ taiga_events_username }}"
-
-- name: Ensure logs directory exists
-  file: path=/home/{{ taiga_events_username }}/logs state=directory owner={{ taiga_events_username }} group={{ taiga_events_username }} mode=0755
-
-# Install circus
-- name: Install circus
-  package: name={{ item }} state=present
-  with_items:
-  - circus
-  become: yes
-  become_user: root
-
-- name: Setup circus configuration
-  template: src=taiga-events.ini.j2 dest=/etc/circus/conf.d/taiga-events.ini
-
 - name: Install nginx
-  package: name={{ item }} state=present
-  with_items:
-  - nginx
+  package: name=nginx state=present
+  become: yes
+  become_user: root
+
+- name: Create taiga includes directory
+  file: path=/etc/nginx/taiga-includes state=directory owner=root group=root mode=0755
   become: yes
   become_user: root
 
 - name: Setup nginx
+  template: src=nginx-taiga-{{ taiga_back_protocol }}.j2 dest=/etc/nginx/sites-available/taiga-{{ taiga_back_protocol }} owner=root group=root mode=0644
+  notify:
+  - restart nginx
+  become: yes
+  become_user: root
+
+- name: Enable taiga site (virtualhost)
+  file: src=/etc/nginx/sites-available/taiga-{{ taiga_back_protocol }} dest=/etc/nginx/sites-enabled/taiga-{{ taiga_back_protocol }} owner=root group=root state=link
+  notify:
+  - restart nginx
+  become: yes
+  become_user: root
+
+- name: Disable default site (virtualhost)
+  file: path=/etc/nginx/sites-enabled/default state=absent
+  notify:
+  - restart nginx
+  become: yes
+  become_user: root
