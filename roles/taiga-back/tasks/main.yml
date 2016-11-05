@@ -93,6 +93,8 @@
 
 - name: Setup taiga back
   template: src=taiga-back_local.py.j2 dest=/home/{{ taiga_back_username }}/taiga-back/settings/local.py owner={{ taiga_back_username }} group={{ taiga_back_username }} mode=0640
+  notify:
+  - circusctl restart taiga
   become: yes
   become_user: "{{ taiga_back_username }}"
 
@@ -121,7 +123,7 @@
   become_user: root
 
 - name: Setup nginx
-  template: src=nginx_taiga-back.j2 dest=/etc/nginx/taiga-includes/taiba-back owner=root group=root mode=0644
+  template: src=nginx_taiga-back.j2 dest=/etc/nginx/taiga-includes/taiga-back owner=root group=root mode=0644
   notify:
   - restart nginx
   become: yes

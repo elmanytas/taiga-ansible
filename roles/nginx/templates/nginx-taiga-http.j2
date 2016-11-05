@@ -9,11 +9,5 @@ server {
     #access_log /home/{{ taiga_back_username }}/logs/nginx.access.log;
     #error_log /home/{{ taiga_back_username }}/logs/nginx.error.log;
 
-    # Frontend
-    location / {
-        root /home/{{ taiga_back_username }}/taiga-front-dist/dist/;
-        try_files $uri $uri/ /index.html;
-    }
-
     include /etc/nginx/taiga-includes/*;
 }

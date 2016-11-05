@@ -3,10 +3,18 @@
   tags:
   - appliance
 
+- name: Setup rabbitmq nodename
+  template: src=rabbitmq-env.conf.j2 dest=/etc/rabbitmq/rabbitmq-env.conf owner=rabbitmq group=rabbitmq mode=0644
+  notify:
+  - restart rabbitmq-server
+
+- meta: flush_handlers
+
 - name: Create vhost
   rabbitmq_vhost:
     name={{ rabbitmq_vhost }}
     state=present
+    node={{ rabbitmq_user }}@{{ rabbitmq_hostname }}
 
 - name: Create rabbitmq user
   rabbitmq_user:
@@ -17,4 +25,5 @@
     read_priv=.*
     write_priv=.*
     state=present
+    node={{ rabbitmq_user }}@{{ rabbitmq_hostname }}
   notify: restart rabbitmq-server

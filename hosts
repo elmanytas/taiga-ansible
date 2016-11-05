@@ -36,7 +36,7 @@ taiga_database_password=taiga
 rabbitmq_user=taiga
 rabbitmq_password=taiga
 rabbitmq_vhost=/taiga
-rabbitmq_hostname=10.42.84.50
+rabbitmq_hostname=taiga
 taiga_events_username=taiga
 
 code_version=stable
@@ -57,7 +57,7 @@ secret_key=theveryultratopsecretkey
 10.42.84.50
 
 [taiga-front-dist]
-#10.42.84.50
+10.42.84.50
 
 [taiga-events]
 #10.42.84.50

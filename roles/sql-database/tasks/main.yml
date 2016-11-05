@@ -10,6 +10,11 @@
   tags:
   - appliance
 
+- name: Ensure mysql/mariadb is started
+  service: name=mysql state=started
+  when: relational_database == "mysql" or relational_database == "mariadb"
+
+
 - name: Configure mysql server
   template: src=mysqld_taiga.cnf.j2 dest=/etc/mysql/conf.d/mysqld_taiga.cnf
   notify: restart mysql
@@ -31,6 +36,9 @@
   when: relational_database == "postgresql"
   tags:
   - appliance
+
+#- name: Ensure postgresql is started
+#  service: name=postgresql state=restarted
 
 # TODO: please, obtain cidr from: `sipcalc ose | grep "Network mask" | grep bits | awk '{print $NF}'`
 
