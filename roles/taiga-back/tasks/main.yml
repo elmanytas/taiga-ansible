@@ -22,6 +22,7 @@
   - postgresql-server-dev-all
   become: yes
   become_user: root
+  tags: workingon
 
 - name: Setup python 3 environment
   package: name={{ item }} state=present
@@ -36,54 +37,64 @@
   - libxslt-dev
   become: yes
   become_user: root
+  tags: workingon
 
 - name: Create taiga system user
   user: name={{ taiga_back_username }}
   become: yes
   become_user: root
+  tags: workingon
 
 - name: Clone taiga-back repository
   git: repo=https://github.com/taigaio/taiga-back.git dest=/home/{{ taiga_back_username }}/taiga-back version={{ code_version }}
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags: workingon
 
 - name: Create taiga-back virtualenv and install requirements
   pip: requirements=/home/{{ taiga_back_username }}/taiga-back/requirements.txt virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv virtualenv_python=/usr/bin/python3.5
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags: workingon
 
 - name: Run migrations
   django_manage: command="migrate --noinput" app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags: workingon
 
 # TODO: test if first installation
 - name: Create initial user
   django_manage: command=loaddata app_path=/home/{{ taiga_back_username }}/taiga-back fixtures=initial_user virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags: workingon
 
 # TODO: test if first installation
 - name: Create initial project templates
   django_manage: command=loaddata app_path=/home/{{ taiga_back_username }}/taiga-back fixtures=initial_project_templates virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags: workingon
 
 # TODO: test if first installation
 - name: Create initial role
   django_manage: command=loaddata app_path=/home/{{ taiga_back_username }}/taiga-back fixtures=initial_role virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags: workingon
 
 - name: Compile messages
   django_manage: command=compilemessages app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags: workingon
 
 - name: Run collectstatic
   django_manage: command="collectstatic --noinput" app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags: workingon
 
 # TODO: test if we really want it
 #- name: Load sample data
@@ -97,6 +108,7 @@
   - circusctl restart taiga
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags: workingon
 
 
 - name: Install circus

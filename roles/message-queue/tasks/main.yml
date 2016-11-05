@@ -14,7 +14,7 @@
   rabbitmq_vhost:
     name={{ rabbitmq_vhost }}
     state=present
-    node={{ rabbitmq_user }}@{{ rabbitmq_hostname }}
+    node={{ rabbitmq_hostname }}
 
 - name: Create rabbitmq user
   rabbitmq_user:
@@ -25,5 +25,6 @@
     read_priv=.*
     write_priv=.*
     state=present
-    node={{ rabbitmq_user }}@{{ rabbitmq_hostname }}
+    force=yes
+    node={{ rabbitmq_hostname }}
   notify: restart rabbitmq-server
