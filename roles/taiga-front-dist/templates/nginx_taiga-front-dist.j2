@@ -1,5 +1,5 @@
 # Frontend
 location / {
-    root /home/{{ taiga_back_username }}/taiga-front-dist/dist/;
+    root /var/www/taiga-front-dist/dist/;
     try_files $uri $uri/ /index.html;
 }

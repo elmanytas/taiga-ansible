@@ -1,18 +1,16 @@
-# Why not deploy this in the standard nginx directory?
-- name: Create taiga system user
-  user: name={{ taiga_front_dist_username }}
-  become: yes
-  become_user: root
-
 - name: Clone taiga-front-dist repository
-  git: repo=https://github.com/taigaio/taiga-front-dist.git dest=/home/{{ taiga_back_username }}/taiga-front-dist version={{ code_version }}
+  git: repo=https://github.com/taigaio/taiga-front-dist.git dest=/var/www/taiga-front-dist version={{ code_version }}
   become: yes
-  become_user: "{{ taiga_front_dist_username }}"
+  become_user: "root"
+  tags:
+  - docker-taiga-front-dist
 
 - name: Setup taiga-front-dist
-  template: src=conf.json.j2 dest=/home/{{ taiga_back_username }}/taiga-front-dist/dist/conf.json owner={{ taiga_front_dist_username }} group={{ taiga_front_dist_username }} mode=0644
+  template: src=conf.json.j2 dest=/var/www/taiga-front-dist/dist/conf.json owner=root group=root mode=0644
   become: yes
-  become_user: "{{ taiga_front_dist_username }}"
+  become_user: root
+  tags:
+  - docker-taiga-front-dist
 
 - name: Setup nginx
   template: src=nginx_taiga-front-dist.j2 dest=/etc/nginx/taiga-includes/taiga-front-dist owner=root group=root mode=0644
@@ -20,3 +18,6 @@
   - restart nginx
   become: yes
   become_user: root
+  tags:
+  - docker-taiga-front-dist
+  - docker-config-taiga-front-dist
