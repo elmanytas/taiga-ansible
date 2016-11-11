@@ -1,7 +1,10 @@
+- hosts: all
+  roles:
+  - ntp
+
 # Database services
 - hosts: sql-database
   roles:
-  - ntp
   - sql-database
   tags:
   - database
@@ -22,7 +25,6 @@
 # Message services
 - hosts: redis
   roles:
-  - ntp
   - redis
   tags:
   - cache-storage
@@ -33,7 +35,6 @@
 # Message services
 - hosts: message-queue
   roles:
-  - ntp
   - message-queue
   tags:
   - message-queue
@@ -45,27 +46,32 @@
 - hosts: taiga-back
   roles:
   - nginx
-  - ntp
-  - taiga-back
   tags:
   - taiga-back
   - back
 
+- hosts: taiga-back
+  roles:
+  - taiga-back
+  tags:
+  - taiga-back
+  - back
+  - taiga-back-docker
 
 # Taiga front dist
 - hosts: taiga-front-dist
   roles:
-  - ntp
   - taiga-front-dist
+  - nginx
   tags:
   - taiga-front
   - taiga-front-dist
   - front
+  - taiga-front-docker
 
 # Taiga events
 - hosts: taiga-events
   roles:
-  - ntp
   - taiga-events
   tags:
   - taiga-events

@@ -2,11 +2,15 @@
   package: name=nginx state=present
   become: yes
   become_user: root
+  tags:
+  - docker-taiga-front-dist
 
 - name: Create taiga includes directory
   file: path=/etc/nginx/taiga-includes state=directory owner=root group=root mode=0755
   become: yes
   become_user: root
+  tags:
+  - docker-taiga-front-dist
 
 - name: Setup nginx
   template: src=nginx-taiga-{{ taiga_back_protocol }}.j2 dest=/etc/nginx/sites-available/taiga-{{ taiga_back_protocol }} owner=root group=root mode=0644
@@ -14,6 +18,8 @@
   - restart nginx
   become: yes
   become_user: root
+  tags:
+  - docker-taiga-front-dist
 
 - name: Enable taiga site (virtualhost)
   file: src=/etc/nginx/sites-available/taiga-{{ taiga_back_protocol }} dest=/etc/nginx/sites-enabled/taiga-{{ taiga_back_protocol }} owner=root group=root state=link
@@ -21,6 +27,8 @@
   - restart nginx
   become: yes
   become_user: root
+  tags:
+  - docker-taiga-front-dist
 
 - name: Disable default site (virtualhost)
   file: path=/etc/nginx/sites-enabled/default state=absent
@@ -28,3 +36,5 @@
   - restart nginx
   become: yes
   become_user: root
+  tags:
+  - docker-taiga-front-dist
