@@ -1,0 +1,232 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "taiga-front-dist",
+    "annotations": {
+      "description": "Taiga Front Dist",
+      "tags": "taiga-front-dist"
+    }
+  },
+  "labels": {
+    "createdBy": "taiga-front-dist-template"
+  },
+  "parameters": [
+    {
+      "description": "The name for the application. The service will be named like the application.",
+      "displayName": "Application name.",
+      "name": "APPLICATION_NAME",
+      "value": "taiga-front-dist"
+    },
+    {
+      "description": "Custom hostname for service routes. Default works for the OpenShift all-in-one VM, e.g.: <application-name>.<project>.<default-domain-suffix>",
+      "displayName": "Taiga Front Dist instance hostname",
+      "name": "APPLICATION_HOSTNAME",
+      "value": "taiga-front-dist.apps.10.2.2.2.xip.io"
+    },
+    {
+      "name": "BACK_SECURITY",
+      "displayName": "http back security: http or https",
+      "description": "http back security: http or https",
+      "value": "http",
+      "required": true
+    },
+    {
+      "name": "BACK_HOSTNAME",
+      "displayName": "PostgreSQL Password",
+      "description": "Password for the PostgreSQL user.",
+      "value": "taiga-back",
+      "required": true
+    }
+  ],
+  "objects": [
+    {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APPLICATION_NAME}",
+        "labels": {
+          "app": "${APPLICATION_NAME}"
+        }
+      },
+      "spec": {
+        "tags": [
+          {
+            "name": "rc",
+            "from": {
+              "kind": "DockerImage",
+              "name": "elmanytas/taiga-front-dist:latest"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APPLICATION_NAME}",
+        "labels": {
+          "app": "${APPLICATION_NAME}"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Rolling",
+          "rollingParams": {
+            "updatePeriodSeconds": 1,
+            "intervalSeconds": 1,
+            "timeoutSeconds": 600,
+            "maxUnavailable": "25%",
+            "maxSurge": "25%"
+          },
+          "resources": {}
+        },
+        "triggers": [
+          {
+            "type": "ConfigChange"
+          },
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "taiga-front-dist"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${APPLICATION_NAME}:latest"
+              }
+            }
+          }
+        ],
+        "replicas": 1,
+        "test": false,
+        "selector": {
+          "app": "${APPLICATION_NAME}",
+          "deploymentconfig": "${APPLICATION_NAME}"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "${APPLICATION_NAME}",
+              "deploymentconfig": "${APPLICATION_NAME}"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "taiga-front-dist",
+                "image": "taiga-front-dist",
+                "ports": [
+                  {
+                    "containerPort": 80,
+                    "protocol": "TCP"
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "taiga-back-protocol",
+                    "value": "${BACK_SECURITY}"
+                  },
+                  {
+                    "name": "taiga-back-hostname",
+                    "value": "${BACK_HOSTNAME}"
+                  }
+                ],
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "2Gi"
+                  },
+                  "requests": {
+                    "cpu": "500m",
+                    "memory": "1Gi"
+                  }
+                },
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/",
+                    "port": 80,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 240,
+                  "timeoutSeconds": 1,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "failureThreshold": 3
+                },
+                "readinessProbe": {
+                  "httpGet": {
+                    "path": "/",
+                    "port": 80,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 20,
+                  "timeoutSeconds": 1,
+                  "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "failureThreshold": 3
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "imagePullPolicy": "IfNotPresent"
+              }
+            ],
+            "restartPolicy": "Always",
+            "terminationGracePeriodSeconds": 30,
+            "dnsPolicy": "ClusterFirst"
+          }
+        }
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APPLICATION_NAME}",
+        "labels": {
+          "app": "${APPLICATION_NAME}"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "80-http",
+            "protocol": "TCP",
+            "port": 80,
+            "targetPort": 80
+          }
+        ],
+        "selector": {
+          "app": "${APPLICATION_NAME}",
+          "deploymentconfig": "${APPLICATION_NAME}"
+        },
+        "type": "ClusterIP",
+        "sessionAffinity": "None"
+      }
+    },
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APPLICATION_NAME}",
+        "labels": {
+          "app": "${APPLICATION_NAME}"
+        }
+      },
+      "spec": {
+        "host": "${APPLICATION_HOSTNAME}",
+        "to": {
+          "kind": "Service",
+          "name": "${APPLICATION_NAME}"
+        },
+        "port": {
+          "targetPort": "80-http"
+        },
+        "tls": {
+          "termination": "edge"
+        }
+      }
+    }
+  ]
+}
