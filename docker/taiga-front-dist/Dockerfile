@@ -4,7 +4,7 @@ MAINTAINER Jose Manuel Ferrer Mosteiro <jmferrer.paradigma@gmail.com>
 
 ENV git_repo=taiga-ansible
 ENV git_user_base=https://github.com/elmanytas
-ENV docker_ansible_tag=docker-taiga-front-dist
+ENV docker_ansible_tags=docker-taiga-front-dist
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -16,7 +16,7 @@ RUN apt-get update; \
 # Workarounded in build-image.sh
 COPY ansible/ /etc/ansible/
 
-RUN ansible-playbook  /etc/ansible/site.yml --tags=$docker_ansible_tag
+RUN ansible-playbook  /etc/ansible/site.yml --tags=$docker_ansible_tags
 
 RUN apt-get -y remove ansible python-apt; \
     apt-get -y autoremove; \
