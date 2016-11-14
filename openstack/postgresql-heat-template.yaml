@@ -118,7 +118,7 @@ resources:
           git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
           cd /root/taiga-ansible
           git checkout develop
-          
+          ansible-playbook -i hosts site.yml --tags=postgresql
 
 
   postgresql_01_server_record:
