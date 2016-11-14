@@ -1,0 +1,187 @@
+heat_template_version: 2016-04-08
+
+description: Deploy postgresql
+
+parameters:
+  key_name:
+    type: string
+    label: Key Name
+    description: Name of key-pair to be used for all compute instances
+    constraints:
+      - custom_constraint: nova.keypair
+    default: tests
+  image_id:
+    type: string
+    label: Image ID
+    description: Ubuntu 16.04 Image to be used
+    default: 00372cec-4d5f-499a-afc2-84079882e40c
+    constraints:
+      - custom_constraint: glance.image
+  instance_flavor:
+    type: string
+    label: Flavor
+    description: Flavor
+    default: 2
+    constraints:
+      - custom_constraint: nova.flavor
+  cidr:
+    type: string
+    label: Network CIDR
+    description: The CIDR of the private network.
+    default: 192.168.3.0/24
+  router:
+    type: string
+    label: Router to use
+    description: The router to link this network
+    default: taiga_private_router
+  availability_zone_postgresql_01:
+    type: string
+    label: Availability Zone 1
+    description: Availability Zone 1
+    default: zone1
+    constraints:
+      - allowed_values:
+        - zone1
+        - zone2
+        - zone3
+
+resources:
+  # Security group that allows all from all
+  postgresql_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: postgresql_security_group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+  # Network infraestructure
+  postgresql_private_net:
+    type: OS::Neutron::Net
+
+  postgresql_private_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: postgresql_private_net }
+      cidr: { get_param: cidr }
+      dns_nameservers: [ "192.168.43.1", "192.168.32.1" ]
+      ip_version: 4
+
+  postgresql_private_router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router: { get_param: router }
+      subnet: { get_resource: postgresql_private_subnet }
+
+  # create server ports (ip addresses)
+  # needed to configure ansible inventory and /etc/hosts
+  postgresql_01_server_port:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_resource: postgresql_private_net }
+      security_groups:
+       - { get_resource: postgresql_security_group }
+
+  postgresql_01_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: public
+      port_id: { get_resource: postgresql_01_server_port }
+
+  postgresql_01_server_external_record:
+    type: OS::Designate::Record
+    properties:
+      name: postgresql-01-ext.cm2016.os.paradigmadigital.com.
+      type: A
+      domain: cm2016.os.paradigmadigital.com.
+      data: { get_attr: [postgresql_01_floating_ip, floating_ip_address] }
+
+  postgresql_01_server:
+    type: OS::Nova::Server
+    properties:
+      name: postgresql_01_server
+      key_name: { get_param: key_name }
+      image: { get_param: image_id }
+      flavor: { get_param: instance_flavor }
+      networks:
+        - port: { get_resource: postgresql_01_server_port }
+      availability_zone: { get_param: availability_zone_postgresql_01 }
+      user_data_format: RAW
+      user_data: |
+          #!/bin/bash
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get -y install ansible git
+
+          git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
+          cd /root/taiga-ansible
+          git checkout develop
+          
+
+
+  postgresql_01_server_record:
+    type: OS::Designate::Record
+    properties:
+      name: postgresql-01.cm2016.os.paradigmadigital.com.
+      type: A
+      domain: cm2016.os.paradigmadigital.com.
+      data: { get_attr: [postgresql_01_server_port, fixed_ips, 0, ip_address] }
+
+  postgresql_lb_vip_port:
+    type: OS::Neutron::Port
+    properties:
+      security_groups: [{ get_resource: postgresql_security_group }]
+      network: { get_resource: postgresql_private_net }
+
+  postgresql_monitor:
+    type: OS::Neutron::HealthMonitor
+    properties:
+      type: TCP
+      delay: 15
+      max_retries: 5
+      timeout: 10
+
+  postgresql_pool:
+    type: OS::Neutron::Pool
+    properties:
+      name: postgresql_lb_pool
+      protocol: TCP
+      subnet_id: { get_resource: postgresql_private_subnet }
+      lb_method: ROUND_ROBIN
+      monitors: [ { get_resource: postgresql_monitor } ]
+      vip:
+        name: front_vip
+        description: Front-end virtual IP (VIP)
+        protocol_port: 80
+#        session_persistence:
+#          type: SOURCE_IP
+
+  postgresql_lb:
+    type: OS::Neutron::LoadBalancer
+    properties:
+      members: [ { get_resource: postgresql_01_server } ]
+      pool_id: { get_resource: postgresql_pool }
+      protocol_port: 80
+
+  postgresql_lb_pool_vip:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_resource: postgresql_lb_vip_floating_ip }
+#      port_id: { 'Fn::Select': ['port_id', {get_attr: [pool, vip] } ] }
+      port_id: { get_attr: [ postgresql_pool, vip, port_id ] }
+
+  postgresql_lb_vip_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: public
+      port_id: { get_resource: postgresql_lb_vip_port }
+
+  postgresql_record:
+    type: OS::Designate::Record
+    properties:
+      name: postgresql.cm2016.os.paradigmadigital.com.
+      type: A
+      domain: cm2016.os.paradigmadigital.com.
+      data: { get_attr: [postgresql_lb_vip_floating_ip, floating_ip_address] }

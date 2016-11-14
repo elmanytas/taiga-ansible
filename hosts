@@ -17,7 +17,7 @@ ansible_ssh_user=ubuntu
 #ansible_become_method=sudo
 #ansible_become_user=root
 
-taiga_back_ip=taiga-back
+taiga_back_network=192.168.4.0/24
 taiga_back_hostname=taiga-back
 taiga_back_username=taiga
 taiga_back_protocol=http

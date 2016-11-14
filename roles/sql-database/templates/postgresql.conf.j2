@@ -60,7 +60,7 @@ external_pid_file = '/var/run/postgresql/9.5-main.pid'			# write an extra PID fi
 					# comma-separated list of addresses;
 					# defaults to 'localhost'; use '*' for all
 
-listen_addresses = '{{ ansible_eth0["ipv4"]["address"] }}'
+listen_addresses = '{{ ansible_default_ipv4["address"] }}'
 					# (change requires restart)
 port = 5432				# (change requires restart)
 max_connections = 100			# (change requires restart)

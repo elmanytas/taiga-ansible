@@ -43,7 +43,7 @@ parameters:
   availability_zone_back_02:
     type: string
     label: Availability Zone 2
-    description: Availability Zone Percona 2
+    description: Availability Zone 2
     default: zone3
     constraints:
       - allowed_values:
