@@ -13,7 +13,7 @@ if [ "$1" = 'taiga-front-dist' ]; then
 	  # * launch ansible with config tag:
 	  #   ansible-playbook  /etc/ansible/site.yml --tags=config-${docker_ansible_tag}
 	  if [ "$taiga_back_hostname" ]; then
-			  sed 's/^taiga_back_hostname*/taiga_back_hostname=$taiga_back_hostname/' /etc/ansible/hosts
+			  sed "s/^taiga_back_hostname.*/taiga_back_hostname=$taiga_back_hostname/" /etc/ansible/hosts
 		fi
 fi
 

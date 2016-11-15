@@ -1,6 +1,6 @@
 heat_template_version: 2016-04-08
 
-description: Deploy taiga back infrastructure
+description: Deploy taiga events infrastructure
 
 parameters:
   key_name:
@@ -28,7 +28,7 @@ parameters:
     type: string
     label: Network CIDR
     description: The CIDR of the private network.
-    default: 192.168.3.0/24
+    default: 192.168.7.0/24
 
   availability_zone_back_01:
     type: string
@@ -53,10 +53,10 @@ parameters:
 
 resources:
   # Security group that allows all from all
-  taiga_back_security_group:
+  taiga_events_security_group:
     type: OS::Neutron::SecurityGroup
     properties:
-      name: taiga_back_security_group
+      name: taiga_events_security_group
       rules:
         - remote_ip_prefix: 0.0.0.0/0
           protocol: tcp
@@ -64,63 +64,63 @@ resources:
           protocol: icmp
 
   # Network infraestructure
-  taiga_back_private_net:
+  taiga_events_private_net:
     type: OS::Neutron::Net
 
-  taiga_back_private_subnet:
+  taiga_events_private_subnet:
     type: OS::Neutron::Subnet
     properties:
-      network_id: { get_resource: taiga_back_private_net }
+      network_id: { get_resource: taiga_events_private_net }
       cidr: { get_param: cidr }
       dns_nameservers: [ "192.168.43.1", "192.168.32.1" ]
       ip_version: 4
 
-  taiga_back_private_router_interface:
+  taiga_events_private_router_interface:
     type: OS::Neutron::RouterInterface
     properties:
       router: taiga_private_router
-      subnet: { get_resource: taiga_back_private_subnet }
+      subnet: { get_resource: taiga_events_private_subnet }
 
   # create server ports (ip addresses)
   # needed to configure ansible inventory and /etc/hosts
-  taiga_back_01_server_port:
+  taiga_events_01_server_port:
     type: OS::Neutron::Port
     properties:
-      network: { get_resource: taiga_back_private_net }
+      network: { get_resource: taiga_events_private_net }
       security_groups:
-       - { get_resource: taiga_back_security_group }
+       - { get_resource: taiga_events_security_group }
 
-  taiga_back_02_server_port:
+  taiga_events_02_server_port:
     type: OS::Neutron::Port
     properties:
-      network: { get_resource: taiga_back_private_net }
+      network: { get_resource: taiga_events_private_net }
       security_groups:
-       - { get_resource: taiga_back_security_group }
+       - { get_resource: taiga_events_security_group }
 
 
-  taiga_back_01_floating_ip:
+  taiga_events_01_floating_ip:
     type: OS::Neutron::FloatingIP
     properties:
       floating_network: public
-      port_id: { get_resource: taiga_back_01_server_port }
+      port_id: { get_resource: taiga_events_01_server_port }
 
-  taiga_back_01_server_external_record:
+  taiga_events_01_server_external_record:
     type: OS::Designate::Record
     properties:
-      name: taiga-back-01-ext.cm2016.os.paradigmadigital.com.
+      name: taiga-events-01-ext.cm2016.os.paradigmadigital.com.
       type: A
       domain: cm2016.os.paradigmadigital.com.
-      data: { get_attr: [taiga_back_01_floating_ip, floating_ip_address] }
+      data: { get_attr: [taiga_events_01_floating_ip, floating_ip_address] }
 
-  taiga_back_01_server:
+  taiga_events_01_server:
     type: OS::Nova::Server
     properties:
-      name: taiga_back_01_server
+      name: taiga_events_01_server
       key_name: { get_param: key_name }
       image: { get_param: image_id }
       flavor: { get_param: instance_flavor }
       networks:
-        - port: { get_resource: taiga_back_01_server_port }
+        - port: { get_resource: taiga_events_01_server_port }
       availability_zone: { get_param: availability_zone_back_01 }
       user_data_format: RAW
       user_data: |
@@ -132,29 +132,40 @@ resources:
           git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
           cd /root/taiga-ansible
           git checkout develop
-          #ansible-playbook -i hosts site.yml --tags=taiga-back
+          #ansible-playbook -i hosts site.yml --tags=taiga-events
 
-  taiga_back_01_server_record:
+  taiga_events_01_server_record:
     type: OS::Designate::Record
     properties:
-      name: taiga-back-01.cm2016.os.paradigmadigital.com.
+      name: taiga-events-01.cm2016.os.paradigmadigital.com.
       type: A
       domain: cm2016.os.paradigmadigital.com.
-      data: { get_attr: [taiga_back_01_server_port, fixed_ips, 0, ip_address] }
+      data: { get_attr: [taiga_events_01_server_port, fixed_ips, 0, ip_address] }
 
-  taiga_back_02_floating_ip:
+  taiga_events_02_floating_ip:
     type: OS::Neutron::FloatingIP
     properties:
       floating_network: public
-      port_id: { get_resource: taiga_back_02_server_port }
+      port_id: { get_resource: taiga_events_02_server_port }
 
-  taiga_back_02_server_external_record:
+  taiga_events_02_server_external_record:
     type: OS::Designate::Record
     properties:
-      name: taiga-back-02-ext.cm2016.os.paradigmadigital.com.
+      name: taiga-events-02-ext.cm2016.os.paradigmadigital.com.
       type: A
       domain: cm2016.os.paradigmadigital.com.
-      data: { get_attr: [taiga_back_02_floating_ip, floating_ip_address] }
+      data: { get_attr: [taiga_events_02_floating_ip, floating_ip_address] }
+
+  taiga_events_02_server:
+    type: OS::Nova::Server
+    properties:
+      name: taiga_events_02_server
+      key_name: { get_param: key_name }
+      image: { get_param: image_id }
+      flavor: { get_param: instance_flavor }
+      networks:
+        - port: { get_resource: taiga_events_02_server_port }
+      availability_zone: { get_param: availability_zone_back_02 }
       user_data_format: RAW
       user_data: |
           #!/bin/bash
@@ -165,34 +176,23 @@ resources:
           git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
           cd /root/taiga-ansible
           git checkout develop
-          #ansible-playbook -i hosts site.yml --tags=taiga-back
+          #ansible-playbook -i hosts site.yml --tags=taiga-events
 
-  taiga_back_02_server:
-    type: OS::Nova::Server
-    properties:
-      name: taiga_back_02_server
-      key_name: { get_param: key_name }
-      image: { get_param: image_id }
-      flavor: { get_param: instance_flavor }
-      networks:
-        - port: { get_resource: taiga_back_02_server_port }
-      availability_zone: { get_param: availability_zone_back_02 }
-
-  taiga_back_02_server_record:
+  taiga_events_02_server_record:
     type: OS::Designate::Record
     properties:
-      name: taiga-back-02.cm2016.os.paradigmadigital.com.
+      name: taiga-events-02.cm2016.os.paradigmadigital.com.
       type: A
       domain: cm2016.os.paradigmadigital.com.
-      data: { get_attr: [taiga_back_02_server_port, fixed_ips, 0, ip_address] }
+      data: { get_attr: [taiga_events_02_server_port, fixed_ips, 0, ip_address] }
 
-  taiga_back_lb_vip_port:
+  taiga_events_lb_vip_port:
     type: OS::Neutron::Port
     properties:
-      security_groups: [{ get_resource: taiga_back_security_group }]
-      network: { get_resource: taiga_back_private_net }
+      security_groups: [{ get_resource: taiga_events_security_group }]
+      network: { get_resource: taiga_events_private_net }
 
-  taiga_back_monitor:
+  taiga_events_monitor:
     type: OS::Neutron::HealthMonitor
     properties:
       type: TCP
@@ -200,14 +200,14 @@ resources:
       max_retries: 5
       timeout: 10
 
-  taiga_back_pool:
+  taiga_events_pool:
     type: OS::Neutron::Pool
     properties:
-      name: taiga_back_lb_pool
+      name: taiga_events_lb_pool
       protocol: TCP
-      subnet_id: { get_resource: taiga_back_private_subnet }
+      subnet_id: { get_resource: taiga_events_private_subnet }
       lb_method: ROUND_ROBIN
-      monitors: [ { get_resource: taiga_back_monitor } ]
+      monitors: [ { get_resource: taiga_events_monitor } ]
       vip:
         name: back_vip
         description: backend virtual IP (VIP)
@@ -215,30 +215,30 @@ resources:
 #        session_persistence:
 #          type: SOURCE_IP
 
-  taiga_back_lb:
+  taiga_events_lb:
     type: OS::Neutron::LoadBalancer
     properties:
-      members: [ { get_resource: taiga_back_01_server },{ get_resource: taiga_back_02_server } ]
-      pool_id: { get_resource: taiga_back_pool }
+      members: [ { get_resource: taiga_events_01_server },{ get_resource: taiga_events_02_server } ]
+      pool_id: { get_resource: taiga_events_pool }
       protocol_port: 80
 
-  taiga_back_lb_pool_vip:
+  taiga_events_lb_pool_vip:
     type: OS::Neutron::FloatingIPAssociation
     properties:
-      floatingip_id: { get_resource: taiga_back_lb_vip_floating_ip }
+      floatingip_id: { get_resource: taiga_events_lb_vip_floating_ip }
 #      port_id: { 'Fn::Select': ['port_id', {get_attr: [pool, vip] } ] }
-      port_id: { get_attr: [ taiga_back_pool, vip, port_id ] }
+      port_id: { get_attr: [ taiga_events_pool, vip, port_id ] }
 
-  taiga_back_lb_vip_floating_ip:
+  taiga_events_lb_vip_floating_ip:
     type: OS::Neutron::FloatingIP
     properties:
       floating_network: public
-      port_id: { get_resource: taiga_back_lb_vip_port }
+      port_id: { get_resource: taiga_events_lb_vip_port }
 
-  taiga_back_record:
+  taiga_events_record:
     type: OS::Designate::Record
     properties:
-      name: taiga-back.cm2016.os.paradigmadigital.com.
+      name: taiga-events.cm2016.os.paradigmadigital.com.
       type: A
       domain: cm2016.os.paradigmadigital.com.
-      data: { get_attr: [taiga_back_lb_vip_floating_ip, floating_ip_address] }
+      data: { get_attr: [taiga_events_lb_vip_floating_ip, floating_ip_address] }
