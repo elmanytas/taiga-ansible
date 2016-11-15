@@ -19,6 +19,7 @@
   - nginx
   tags:
   - nginx
+  - taiga-front-dist
   become: yes
   become_user: root
 

@@ -46,6 +46,9 @@ secret_key=theveryultratopsecretkey
 [sql-database]
 localhost ansible_connection=local
 
+[nginx]
+localhost ansible_connection=local
+
 [message-queue]
 localhost ansible_connection=local
 
