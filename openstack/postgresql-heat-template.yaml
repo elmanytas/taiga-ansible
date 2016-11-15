@@ -115,10 +115,14 @@ resources:
           apt-get update
           apt-get -y install ansible git
 
-          git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
-          cd /root/taiga-ansible
+          git clone https://github.com/elmanytas/taiga-ansible /tmp/taiga-ansible
+          cd /tmp/taiga-ansible
           git checkout develop
-          ansible-playbook -i hosts site.yml --tags=postgresql
+          rsync -av /tmp/taiga-ansible/ /etc/ansible/
+
+          sed -i "s/^taiga_back_network.*/taiga_back_network=192.168.3.0/24/" /etc/ansible/hosts
+
+          ansible-playbook -i /etc/ansible/hosts /etc/ansible/site.yml --tags=postgresql
 
 
   postgresql_01_server_record:
