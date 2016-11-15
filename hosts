@@ -27,6 +27,7 @@ taiga_front_dist_username=taiga
 taiga_front_dist_protocol=http
 
 relational_database=postgresql
+taiga_database_hostname=postgresql
 taiga_database_name=taiga
 # taiga_database_username MUST be the same than taiga_back_username
 taiga_database_username=taiga

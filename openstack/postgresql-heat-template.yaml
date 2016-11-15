@@ -118,6 +118,7 @@ resources:
           git clone https://github.com/elmanytas/taiga-ansible /tmp/taiga-ansible
           cd /tmp/taiga-ansible
           git checkout develop
+
           rsync -av /tmp/taiga-ansible/ /etc/ansible/
 
           sed -i "s/^taiga_back_network.*/taiga_back_network=192.168.3.0/24/" /etc/ansible/hosts

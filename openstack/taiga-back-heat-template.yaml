@@ -129,10 +129,15 @@ resources:
           apt-get update
           apt-get -y install ansible git
 
-          git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
-          cd /root/taiga-ansible
+          git clone https://github.com/elmanytas/taiga-ansible /tmp/taiga-ansible
+          cd /tmp/taiga-ansible
           git checkout develop
-          #ansible-playbook -i hosts site.yml --tags=taiga-back
+
+          rsync -av /tmp/taiga-ansible/ /etc/ansible/
+
+          sed -i "s/^taiga_database_hostname.*/taiga_database_hostname=postgresql.cm2016.os.paradigmadigital.com/" /etc/ansible/hosts
+
+          ansible-playbook -i /etc/ansible/hosts /etc/ansible/site.yml --tags=taiga-back
 
   taiga_back_01_server_record:
     type: OS::Designate::Record
@@ -155,17 +160,6 @@ resources:
       type: A
       domain: cm2016.os.paradigmadigital.com.
       data: { get_attr: [taiga_back_02_floating_ip, floating_ip_address] }
-      user_data_format: RAW
-      user_data: |
-          #!/bin/bash
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update
-          apt-get -y install ansible git
-
-          git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
-          cd /root/taiga-ansible
-          git checkout develop
-          #ansible-playbook -i hosts site.yml --tags=taiga-back
 
   taiga_back_02_server:
     type: OS::Nova::Server
@@ -177,6 +171,22 @@ resources:
       networks:
         - port: { get_resource: taiga_back_02_server_port }
       availability_zone: { get_param: availability_zone_back_02 }
+      user_data_format: RAW
+      user_data: |
+          #!/bin/bash
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get -y install ansible git
+
+          git clone https://github.com/elmanytas/taiga-ansible /tmp/taiga-ansible
+          cd /tmp/taiga-ansible
+          git checkout develop
+
+          rsync -av /tmp/taiga-ansible/ /etc/ansible/
+
+          sed -i "s/^taiga_database_hostname.*/taiga_database_hostname=postgresql.cm2016.os.paradigmadigital.com/" /etc/ansible/hosts
+
+          ansible-playbook -i /etc/ansible/hosts /etc/ansible/site.yml --tags=taiga-back
 
   taiga_back_02_server_record:
     type: OS::Designate::Record

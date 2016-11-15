@@ -42,3 +42,9 @@ CELERY_ENABLED = True
 # events
 #EVENTS_PUSH_BACKEND = "taiga.events.backends.rabbitmq.EventsPushBackend"
 #EVENTS_PUSH_BACKEND_OPTIONS = {"url": "amqp://{{ rabbitmq_user }}:{{ rabbitmq_password }}@{{ rabbitmq_hostname }}:5672/{{ rabbitmq_vhost }}"}
+
+
+DATABASES["default"]["NAME"] = "{{ taiga_database_name }}"
+DATABASES["default"]["USER"] = "{{ taiga_database_user }}"
+DATABASES["default"]["PASSWORD"] = "{{ taiga_database_password }}"
+DATABASES["default"]["HOST"] = "{{ taiga_database_hostname }}"
