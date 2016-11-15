@@ -14,7 +14,7 @@ parameters:
     type: string
     label: Image ID
     description: Ubuntu 16.04 Image to be used
-    default: 00372cec-4d5f-499a-afc2-84079882e40c
+    default: b845acec-cb15-4a8a-89c8-9fd384df8971
     constraints:
       - custom_constraint: glance.image
   instance_flavor:
@@ -129,10 +129,14 @@ resources:
           apt-get update
           apt-get -y install ansible git
 
-          git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
-          cd /root/taiga-ansible
+          git clone https://github.com/elmanytas/taiga-ansible /tmp/taiga-ansible
+          cd /tmp/taiga-ansible
           git checkout develop
-          #ansible-playbook -i hosts site.yml --tags=taiga-front-dist
+          rsync -av /tmp/taiga-ansible/ /etc/ansible/
+
+          sed -i "s/^taiga_back_hostname.*/taiga_back_hostname=taiga-back.cm2016.os.paradigmadigital.com/" /etc/ansible/hosts
+
+          ansible-playbook -i /etc/ansible/hosts /etc/ansible/site.yml --tags=taiga-front-dist
 
   taiga_front_dist_01_server_record:
     type: OS::Designate::Record
@@ -173,10 +177,14 @@ resources:
           apt-get update
           apt-get -y install ansible git
 
-          git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
-          cd /root/taiga-ansible
+          git clone https://github.com/elmanytas/taiga-ansible /tmp/taiga-ansible
+          cd /tmp/taiga-ansible
           git checkout develop
-          #ansible-playbook -i hosts site.yml --tags=taiga-front-dist
+          rsync -av /tmp/taiga-ansible/ /etc/ansible/
+
+          sed -i "s/^taiga_back_hostname.*/taiga_back_hostname=taiga-back.cm2016.os.paradigmadigital.com/" /etc/ansible/hosts
+
+          ansible-playbook -i /etc/ansible/hosts /etc/ansible/site.yml --tags=taiga-front-dist
 
   taiga_front_dist_02_server_record:
     type: OS::Designate::Record
