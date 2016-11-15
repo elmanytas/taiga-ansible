@@ -57,6 +57,14 @@
   become_user: "{{ taiga_back_username }}"
   tags: workingon
 
+- name: Setup taiga back
+  template: src=taiga-back_local.py.j2 dest=/home/{{ taiga_back_username }}/taiga-back/settings/local.py owner={{ taiga_back_username }} group={{ taiga_back_username }} mode=0640
+  notify:
+  - circusctl restart taiga
+  become: yes
+  become_user: "{{ taiga_back_username }}"
+  tags: workingon
+
 - name: Run migrations
   django_manage: command="migrate --noinput" app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
@@ -101,14 +109,6 @@
 #  django_manage: command="sample_data" app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
 #  become: yes
 #  become_user: "{{ taiga_back_username }}"
-
-- name: Setup taiga back
-  template: src=taiga-back_local.py.j2 dest=/home/{{ taiga_back_username }}/taiga-back/settings/local.py owner={{ taiga_back_username }} group={{ taiga_back_username }} mode=0640
-  notify:
-  - circusctl restart taiga
-  become: yes
-  become_user: "{{ taiga_back_username }}"
-  tags: workingon
 
 
 - name: Install circus
