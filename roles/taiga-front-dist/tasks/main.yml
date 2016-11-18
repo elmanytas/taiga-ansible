@@ -21,4 +21,3 @@
   become_user: root
   tags:
   - docker-taiga-front-dist
-  - config-docker-taiga-front-dist
