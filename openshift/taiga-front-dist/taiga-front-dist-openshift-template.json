@@ -33,8 +33,8 @@
     },
     {
       "name": "BACK_HOSTNAME",
-      "displayName": "PostgreSQL Password",
-      "description": "Password for the PostgreSQL user.",
+      "displayName": "Back Hostname",
+      "description": "Back fqdn.",
       "value": "taiga-back",
       "required": true
     }
@@ -52,7 +52,7 @@
       "spec": {
         "tags": [
           {
-            "name": "rc",
+            "name": "latest",
             "from": {
               "kind": "DockerImage",
               "name": "elmanytas/taiga-front-dist:latest"
@@ -126,11 +126,11 @@
                 ],
                 "env": [
                   {
-                    "name": "taiga-back-protocol",
+                    "name": "taiga_back_protocol",
                     "value": "${BACK_SECURITY}"
                   },
                   {
-                    "name": "taiga-back-hostname",
+                    "name": "taiga_back_hostname",
                     "value": "${BACK_HOSTNAME}"
                   }
                 ],
@@ -222,9 +222,6 @@
         },
         "port": {
           "targetPort": "80-http"
-        },
-        "tls": {
-          "termination": "edge"
         }
       }
     }
