@@ -5,6 +5,7 @@ MAINTAINER Jose Manuel Ferrer Mosteiro <jmferrer.paradigma@gmail.com>
 ENV git_repo=taiga-ansible
 ENV git_user_base=https://github.com/elmanytas
 ENV docker_ansible_tags=docker-taiga-front-dist
+ENV taiga_back_hostname=taiga-back
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -16,10 +17,10 @@ RUN apt-get update; \
 # Workarounded in build-image.sh
 COPY ansible/ /etc/ansible/
 
+RUN sed -i "s/^taiga_back_hostname.*/taiga_back_hostname=$taiga_back_hostname/" /etc/ansible/hosts
 RUN ansible-playbook  /etc/ansible/site.yml --tags=$docker_ansible_tags
 
-RUN apt-get -y remove ansible python-apt; \
-    apt-get -y autoremove; \
+RUN apt-get -y autoremove; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
@@ -29,4 +30,4 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 80
 
-CMD ["taiga-front-dist"]
+CMD ["nginx", "-g", "daemon off;"]

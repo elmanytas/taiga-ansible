@@ -11,6 +11,7 @@
   become_user: root
   tags:
   - docker-taiga-front-dist
+  - config-docker-taiga-front-dist
 
 - name: Setup nginx
   template: src=nginx_taiga-front-dist.j2 dest=/etc/nginx/taiga-includes/taiga-front-dist owner=root group=root mode=0644
