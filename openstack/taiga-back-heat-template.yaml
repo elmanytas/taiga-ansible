@@ -14,7 +14,7 @@ parameters:
     type: string
     label: Image ID
     description: Ubuntu 16.04 Image to be used
-    default: 00372cec-4d5f-499a-afc2-84079882e40c
+    default: 02b363a9-5df6-4da9-b904-a1c16fcc6ba9
     constraints:
       - custom_constraint: glance.image
   instance_flavor:
