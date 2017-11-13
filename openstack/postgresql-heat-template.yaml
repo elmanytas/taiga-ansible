@@ -14,7 +14,7 @@ parameters:
     type: string
     label: Image ID
     description: Ubuntu 16.04 Image to be used
-    default: d5eadf4a-7490-4e95-87c4-c1005c7f2d4c
+    default: 00372cec-4d5f-499a-afc2-84079882e40c
     constraints:
       - custom_constraint: glance.image
   instance_flavor:
@@ -115,15 +115,10 @@ resources:
           apt-get update
           apt-get -y install ansible git
 
-          git clone https://github.com/elmanytas/taiga-ansible /tmp/taiga-ansible
-          cd /tmp/taiga-ansible
+          git clone https://github.com/elmanytas/taiga-ansible /root/taiga-ansible
+          cd /root/taiga-ansible
           git checkout develop
-
-          rsync -av /tmp/taiga-ansible/ /etc/ansible/
-
-          sed -i "s/^taiga_back_network.*/taiga_back_network=192.168.3.0\/24/" /etc/ansible/hosts
-
-          ansible-playbook -i /etc/ansible/hosts /etc/ansible/site.yml --tags=postgresql
+          ansible-playbook -i hosts site.yml --tags=postgresql
 
 
   postgresql_01_server_record:
@@ -134,10 +129,59 @@ resources:
       domain: cm2016.os.paradigmadigital.com.
       data: { get_attr: [postgresql_01_server_port, fixed_ips, 0, ip_address] }
 
+  postgresql_lb_vip_port:
+    type: OS::Neutron::Port
+    properties:
+      security_groups: [{ get_resource: postgresql_security_group }]
+      network: { get_resource: postgresql_private_net }
+
   postgresql_record:
     type: OS::Designate::Record
     properties:
       name: postgresql.cm2016.os.paradigmadigital.com.
       type: A
       domain: cm2016.os.paradigmadigital.com.
-      data: { get_attr: [postgresql_01_server_port, fixed_ips, 0, ip_address] }
+      data: { get_attr: [postgresql_lb_vip_port, fixed_ips, 0, ip_address] }
+
+  postgresql_monitor:
+    type: OS::Neutron::HealthMonitor
+    properties:
+      type: TCP
+      delay: 15
+      max_retries: 5
+      timeout: 10
+
+  postgresql_pool:
+    type: OS::Neutron::Pool
+    properties:
+      name: postgresql_lb_pool
+      protocol: TCP
+      subnet_id: { get_resource: postgresql_private_subnet }
+      lb_method: ROUND_ROBIN
+      monitors: [ { get_resource: postgresql_monitor } ]
+      vip:
+        name: postgresql_vip
+        description: Postgresql virtual IP (VIP)
+        protocol_port: 80
+#        session_persistence:
+#          type: SOURCE_IP
+
+  postgresql_lb:
+    type: OS::Neutron::LoadBalancer
+    properties:
+      members: [ { get_resource: postgresql_01_server } ]
+      pool_id: { get_resource: postgresql_pool }
+      protocol_port: 80
+
+#  postgresql_lb_pool_vip:
+#    type: OS::Neutron::FloatingIPAssociation
+#    properties:
+#      floatingip_id: { get_resource: postgresql_lb_vip_floating_ip }
+##      port_id: { 'Fn::Select': ['port_id', {get_attr: [pool, vip] } ] }
+#      port_id: { get_attr: [ postgresql_pool, vip, port_id ] }
+
+#  postgresql_lb_vip_floating_ip:
+#    type: OS::Neutron::FloatingIP
+#    properties:
+#      floating_network: public
+#      port_id: { get_resource: postgresql_lb_vip_port }
