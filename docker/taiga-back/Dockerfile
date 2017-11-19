@@ -12,9 +12,6 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update; \
     apt-get -y install ansible python-apt git
 
-RUN apt-get -y install build-essential binutils-doc autoconf flex bison libjpeg-dev libfreetype6-dev zlib1g-dev libzmq3-dev libgdbm-dev libncurses5-dev automake libtool libffi-dev curl git tmux gettext postgresql-server-dev-all python3 python3-pip python-dev python3-dev python-pip virtualenvwrapper libxml2-dev libxslt-dev
-
-
 # This does not work anymore: https://github.com/docker/docker/issues/2745
 #COPY ../.. /etc/ansible
 # Workarounded in build-image.sh
