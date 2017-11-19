@@ -1,3 +1,11 @@
+- name: Install sudo
+  package: name=sudo state=present
+  become: yes
+  become_user: root
+  tags:
+    - docker-taiga-back
+    - docker-taiga-celery
+
 - name: Install a C compiler and development headers
   package: name={{ item }} state=present
   with_items:
@@ -22,7 +30,9 @@
   - postgresql-server-dev-all
   become: yes
   become_user: root
-  tags: workingon
+  tags:
+    - docker-taiga-back
+    - docker-taiga-celery
 
 - name: Setup python 3 environment
   package: name={{ item }} state=present
@@ -37,25 +47,33 @@
   - libxslt-dev
   become: yes
   become_user: root
-  tags: workingon
+  tags:
+    - docker-taiga-back
+    - docker-taiga-celery
 
 - name: Create taiga system user
   user: name={{ taiga_back_username }}
   become: yes
   become_user: root
-  tags: workingon
+  tags:
+    - docker-taiga-back
+    - docker-taiga-celery
 
 - name: Clone taiga-back repository
   git: repo=https://github.com/taigaio/taiga-back.git dest=/home/{{ taiga_back_username }}/taiga-back version={{ code_version }}
   become: yes
   become_user: "{{ taiga_back_username }}"
-  tags: workingon
+  tags:
+    - docker-taiga-back
+    - docker-taiga-celery
 
 - name: Create taiga-back virtualenv and install requirements
   pip: requirements=/home/{{ taiga_back_username }}/taiga-back/requirements.txt virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv virtualenv_python=/usr/bin/python3.5
   become: yes
   become_user: "{{ taiga_back_username }}"
-  tags: workingon
+  tags:
+    - docker-taiga-back
+    - docker-taiga-celery
 
 - name: Setup taiga back
   template: src=taiga-back_local.py.j2 dest=/home/{{ taiga_back_username }}/taiga-back/settings/local.py owner={{ taiga_back_username }} group={{ taiga_back_username }} mode=0640
@@ -63,46 +81,53 @@
   - circusctl restart taiga
   become: yes
   become_user: "{{ taiga_back_username }}"
-  tags: workingon
+  tags:
+    - docker-taiga-back
 
 - name: Run migrations
   django_manage: command="migrate --noinput" app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
-  tags: workingon
+  tags:
+    - config-docker-taiga-back
 
 # TODO: test if first installation
 - name: Create initial user
   django_manage: command=loaddata app_path=/home/{{ taiga_back_username }}/taiga-back fixtures=initial_user virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
-  tags: workingon
+  tags:
+    - config-docker-taiga-back
 
 # TODO: test if first installation
 - name: Create initial project templates
   django_manage: command=loaddata app_path=/home/{{ taiga_back_username }}/taiga-back fixtures=initial_project_templates virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
-  tags: workingon
+  tags:
+    - config-docker-taiga-back
 
 # TODO: test if first installation
 - name: Create initial role
   django_manage: command=loaddata app_path=/home/{{ taiga_back_username }}/taiga-back fixtures=initial_role virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
-  tags: workingon
+  tags:
+    - config-docker-taiga-back
 
 - name: Compile messages
   django_manage: command=compilemessages app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
-  tags: workingon
+  tags:
+    - config-docker-taiga-back
 
 - name: Run collectstatic
   django_manage: command="collectstatic --noinput" app_path=/home/{{ taiga_back_username }}/taiga-back virtualenv=/home/{{ taiga_back_username }}/taiga-back-virtualenv
   become: yes
   become_user: "{{ taiga_back_username }}"
-  tags: workingon
+  tags:
+    - config-docker-taiga-back
 
 # TODO: test if we really want it
 #- name: Load sample data
@@ -115,11 +140,17 @@
   package: name=circus state=present
   become: yes
   become_user: root
+  tags:
+    - docker-taiga-back
+    - docker-taiga-celery
 
 - name: Ensure logs directory exists
   file: path=/home/{{ taiga_back_username }}/logs state=directory owner={{ taiga_back_username }} group={{ taiga_back_username }} mode=0755
   become: yes
   become_user: "{{ taiga_back_username }}"
+  tags:
+    - docker-taiga-back
+    - docker-taiga-celery
 
 - name: Setup taiga-back circus
   template: src=circus_taiga-back.ini.j2 dest=/etc/circus/conf.d/taiga-back.ini owner=root group=root mode=0644
@@ -127,6 +158,9 @@
   - restart circusd
   become: yes
   become_user: root
+  tags:
+    - docker-taiga-back
+    - config-docker-taiga-back
 
 
 - name: Install nginx
@@ -150,3 +184,6 @@
   - circusctl start taiga-celery
   become: yes
   become_user: root
+  tags:
+    - docker-taiga-celery
+    - config-docker-taiga-celery

@@ -1,0 +1,62 @@
+[taiga:children]
+sql-database
+message-queue
+redis
+taiga-back
+taiga-front-dist
+taiga-events
+
+
+# Set variables common for all OSEv3 hosts
+[taiga:vars]
+# This user must have sudo permissions
+ansible_ssh_user=ubuntu
+
+# Do not define ansible_become vars here
+#ansible_become=true
+#ansible_become_method=sudo
+#ansible_become_user=root
+
+taiga_back_ip=taiga-back
+taiga_back_hostname=taiga-back
+taiga_back_username=taiga
+taiga_back_protocol=http
+
+taiga_front_dist_hostname=taiga-front-dist
+taiga_front_dist_username=taiga
+taiga_front_dist_protocol=http
+
+relational_database=postgresql
+taiga_database_name=taiga
+# taiga_database_username MUST be the same than taiga_back_username
+taiga_database_username=taiga
+taiga_database_password=taiga
+
+
+rabbitmq_user=taiga
+rabbitmq_password=taiga
+rabbitmq_vhost=/taiga
+rabbitmq_hostname=taiga
+taiga_events_username=taiga
+
+code_version=stable
+
+secret_key=theveryultratopsecretkey
+
+[sql-database]
+localhost ansible_connection=local
+
+[message-queue]
+localhost ansible_connection=local
+
+[redis]
+localhost ansible_connection=local
+
+[taiga-back]
+localhost ansible_connection=local
+
+[taiga-front-dist]
+localhost ansible_connection=local
+
+[taiga-events]
+localhost ansible_connection=local
